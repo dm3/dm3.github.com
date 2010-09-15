@@ -1,10 +1,13 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>@dm3</title>
-    </head>
+---
+layout: default
+title: Home
+---
 
-    <body>
-        <h1>Oh, hai!</h1>
-    </body>
-</html>
+<div id="home">
+    <h1>Posts</h1>
+    <ul class="posts">
+        {% for post in site.posts %}
+            <li><span>{{ post.date | date_to_string }}</span> &raquo; <a href="{{ post.url }}">{{ post.title }}</a></li>
+        {% endfor %}
+    </ul>
+</div>

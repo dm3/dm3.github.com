@@ -1,0 +1,172 @@
+---
+layout: post
+title: Installing Arch Linux
+---
+
+I finally got around installing a linux distro on my new notebook. After
+carefully choosing the easiest and the lightest one, I chose arch. Of all
+distributions arch linux has one of the best wikis available, an awesome
+package manager and an active community.
+
+The installation process is surprisingly smooth. If you still manage to get
+lost (as I did) - it's very helpful to have
+[this](http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide)
+page open on another screen. Remember what I mentioned about good
+jocumentation?
+
+The only caveat which made me install the distribution for the
+second time was the `wireless_tools` package which isn't selected by default. I
+didn't have access to ethernet, so it was either no internet or a reinstall.
+Anyway, if you only have wireless available, don't forget to choose
+`wireless_tools` package from `base-devel`, as you won't be able to configure
+wireless without it.
+
+##Setting up wireless
+Refer to [wireless](http://wiki.archlinux.org/index.php/Wireless_Setup) or
+[network](http://wiki.archlinux.org/index.php/Network_Profiles) wiki for a DHCP
+setup to get network up and running.
+
+For the impatient:
+
+{% highlight bash %}
+ifconfig wlan0 up #activate the kernel interface
+iwconfig wlan0 essid "MyEssid" key 1234567890 #WEP encrypted
+dhcpcd wlan0
+{% endhighlight %}
+
+Add this to `/etc/rc.conf` under the `NETWORKING`:
+
+{% highlight bash %}
+wlan0="dhcp"
+INTERFACES=(wlan0)
+{% endhighlight %}
+
+##Network profiles
+When you get tired of setting up connection manually every time you start up
+your box (usually happens after the second boot) and think about
+putting the `ifconfig` stuff in a start up script - don't do that. The standard
+way to set up a network is through the `netcfg` utility/daemon. You need to set
+up a profile  which will reside in `/etc/network.d` and add the net-profiles
+daemon
+
+{% highlight bash %}
+DAEMONS=(syslog-ng !network hal netfs net-profiles crond pcm)
+{% endhighlight %}
+
+and the network profile name (under `NETWORKING`)
+
+{% highlight bash %}
+NETWORKS=(profile-in-rc.d/network)
+{% endhighlight %}
+
+to you `rc.conf` (note that I have disabled the `network` daemon for some reason,
+not really sure why though). To be honest, I could not get `netcfg` to
+successfully connect using my profile for the first week. It fixed itself after
+a system update some time later.
+
++ If you ever need to restart network do: `/etc/rc.d/network restart`
+
+##Setting up X
+An excerpt from [xorg wiki](http://wiki.archlinux.org/index.php/Xorg):
+
+{% highlight bash %}
+pacman -S xorg
+pacman -S nvidia #if you have an nvidia card
+nvidia-xconfig #creates an /etc/X11/xorg.conf
+pacman -S acpid
+{% endhighlight %}
+
+add `hal` and `dbus` to `DAEMONS` in `/etc/rc.conf` and you're good to go.
+
+* For the curious: you can read about `acpid` in the [power management](http://wiki.archlinux.org/index.php/Acpid) section.
+* When I tried to run X for the first time, I would get locked out and had to
+hard-reboot the box. However, it wasn't really dead as I figured out later. If
+you ever get into what looks like a lock out, try `ctrl+alt+F1/2/..` which will
+bring up another TTY screen.
+
+##Setting up WM
+I chose xmonad ([arch wiki](http://wiki.archlinux.org/index.php/Xmonad)). The installation
+process is fairly straightforward, just proceed as described in wiki.
+The only problem I have encountered was the `freetype` lib which wasn't installed. Easily fixed by
+
+{% highlight bash %}
+pacman -Ss freetype && pacman -S extras/libxft
+{% endhighlight %}
+
+* If you get a blank screen and your `/var/Xorg.0.log` is empty - probably xmonad
+has started without errors. It's a minimal window manager, so don't expect much
+eye candy.  Use `Meta+S+Enter` to open a terminal and read a wiki from there.
+
+* If you ever run into troubles while upgrading or installing any graphical
+packages look [here](http://www.archlinux.org/news/445/).
+
+* If you find yourself staring at your keyboard, unable to figure out what to
+press in order to switch to another window/desktop or open another console -
+use [this](http://haskell.org/sitewiki/images/b/b8/Xmbindings.png)
+vi-style reference.
+
+* You also might want to have a status bar. There are two competitors currently:
+xmobar and dzen, latter being more feature-rich and sophisticated. That's why I
+chose the former one. Its setup is straightforward as `pacman -S xmobar`
+and following the xmonad guide on adding a statusbar.
+
+* xmonad 0.9.1 has a problem with playing HTML5 video tags in full screen.
+
+##Setting up sound
+Sound is managed by [ALSA](http://wiki.archlinux.org/index.php/ALSA). I don't
+know what it is for sure, so I'll leave it to your imagination. To get it up
+and running you need
+
+    pacman -S alsa-utils
+    alsaconf
+    aplay  /usr/share/sounds/alsa/Front_Center.wav
+
+If you can't hear the pleasant voice, consult the oracle.
+
+##Setting up touchpad
+See [Touchpad  Synaptics](http://wiki.archlinux.org/index.php/Touchpad_Synaptics). According to the wiki, you only need to
+
+    pacman  -S xf86-input-synaptics
+
+However, it didn't work for me without a restart.
+
+##Applications
+Arch is a lean distro, it even has it's user selected "Lean and Mean of the Year"
+list of applications found [somewhere](http://bbs.archlinux.org/viewtopic.php?id=88515) in the forums
+section.
+
+##File manager
+Definitely `vifm`. However, installing `vifm` is not as straightforward as
+other packages as it isn't yet in the official arch repo (as of 2010-02-16).
+
+To manually a build a package under arch, first you need to get the 'arch build
+system' - `abs`:
+
+    pacman -S abs
+
+then the base-devel group:
+
+    pacman -S base-devel
+
+create a directory for unofficial package builds and get the package:
+
+    mkdir ~/builds && cd ~/builds && \
+    wget http://aur.archlinux.org/packages/vifm-git/vifm-git.tar.gz
+
+build the package:
+
+    tar -xvf vifm-git.tar.gz && cd PKGBUILD && makepkg -s
+
+install the resulting tar:
+
+    pacman -U [the tar.gz file built by makepkg]
+
+Enjoy vi-like keybindings in a file manager! I never looked back, seriously.
+
+##General Tips
+* If shutdown doesn't shut down -  use `poweroff`. In my case `shutdown` didn't work, no matter what I tried: all
+of the `shutdown` options, apci modes, e.t.c.  After a search through arch
+forums (which resulted in zero topics matching the symptoms I've been having)
+and a dozen tries I just gave up and tried the `poweroff` which worked like a
+charm.
+
