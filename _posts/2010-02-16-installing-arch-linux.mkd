@@ -136,7 +136,7 @@ list of applications found [somewhere](http://bbs.archlinux.org/viewtopic.php?id
 section.
 
 ##File manager
-Definitely `vifm`. However, installing `vifm` is not as straightforward as
+Definitely [vifm](http://vifm.sourceforge.net/). However, installing `vifm` is not as straightforward as
 other packages as it isn't yet in the official arch repo (as of 2010-02-16).
 
 To manually a build a package under arch, first you need to get the 'arch build

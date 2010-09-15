@@ -76,6 +76,10 @@ a:hover, a:focus {
     margin: 0 auto;
 }
 
+#home {
+    text-align: center;
+}
+
 /* home: from mojombo */
 
 ul.posts {
@@ -91,6 +95,7 @@ ul.posts span {
     color: #666666;
     font-family: Monaco, "Courier New", monospace;
     font-size: 100%;
+    font-weight: bold;
 }
 
 /* post: from mojombo */
