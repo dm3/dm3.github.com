@@ -12,7 +12,7 @@ The installation process is surprisingly smooth. If you still manage to get
 lost (as I did) - it's very helpful to have
 [this](http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide)
 page open on another screen. Remember what I mentioned about good
-jocumentation?
+documentation?
 
 The only caveat which made me install the distribution for the
 second time was the `wireless_tools` package which isn't selected by default. I
