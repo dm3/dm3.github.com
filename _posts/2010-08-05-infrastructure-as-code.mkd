@@ -1,0 +1,81 @@
+---
+layout: post
+title: Infrastructure as code (talk)
+---
+
+Here's a summary/review of an Infoq hosted DevOps meetup called
+["Infrastructure as code"](http://www.infoq.com/presentations/infrastructure-as-code).
+
+Four speakers presented their ideas on the infrastructure of the IT company
+which follows/enhances/mirrors the practices and paradigms used in software
+engineering.
+
+## Random quotes (inaccurate)
+> 10 years ago people would laugh at you if you asked for 10000 boxes. Now
+> amazon can provide you with the same amount in a minute.
+
+> Cloud is sort of awesome :)
+
+> I don't want any human near my sudo.
+
+> If a configuration change process for a production server takes 16 hours
+> (including all of the bureaucracy), 30 minutes saved by a tool won't
+> matter that much.
+
+## What ops could borrow from software developers
+Infrastructure people have a long tool generation cycle (compared to devs). The
+tool lifecycle for rubyists, for example, is 6 days long (that was a joke).
+
+Some ideas on testing in operations:
+
+- Use Hudson to create a VM and check its state after the config is run.
+- Not having tests might lead to a situation where a complicated script is
+  modified by a person who didn't write it which might result in your kernel
+  replaced by a 'DOH!'.
+- Take a concept from software engineering (such as unit tests) and adapt to
+  the infrastructure world. Lengthy discussion on how unit testing is
+  applicable in operations followed.
+
+> Pushing software engineering paradigms to ops doesn't work because ops have a
+> simple job: it should be up all the time. You can never exceed expectations.
+> New paradigms only introduce risk.
+
+## What software developers could borrow from ops
+Pushing op paradigms into software engineering is largely lacking. Ops
+paradigms:
+
+- Accountability and observability
+- Debuggability in production
+
+> You wan't your boxes _and_ your software fully monitorable. All of the problems
+> should be traced to their roots. Take for example
+> [DTrace](http://www.oracle.com/technetwork/systems/dtrace/dtrace/index-jsp-137532.html)
+> originally developed by SUN. We are still waiting for tools of this quality to
+> be available on Linux.
+
+Software applications, as I know them, are lacking observability. JVM
+applications (which I'm familiar with) are kind of observable on a lower level
+(jconsole/visualvm), but I assume the speakers were talking about the much
+deeper integration between the monitoring tools used to monitor generic systems
+and the possibilities to monitor generic applications.
+
+## More ideas
+Some more chat on the configurability and layers of configuration followed. All
+presenters agreed that there is no end to the abstraction layers, just the same as in
+software engineering. Current systems (chef/puppet) provide a uniform
+configuration deployment mechanism, but the custom recipes still vary wildly
+between users, which means that we're only at the beginning of real operations
+reuse.
+
+> Writing Cucumber acceptance tests for infrastructure before the
+> development and hooking them to the monitoring software (nagios/zabbix)
+> This way business people run the tests _against infrastructure_ themselves.
+
+I can't even imagine how this would look like in practice. Certainly, an idea
+worth pursuing.
+
+## Conclusion
+All in all, an interesting talk. It was especially interesting to hear about
+the advanced operations as I've had a minimal exposure to the systems
+administration and its evolution during the past decade. Gonna have to read up
+on that and finally try out [puppet](http://www.puppetlabs.com/).
