@@ -1,0 +1,69 @@
+---
+layout: post
+title: Death by Accidental Complexity
+---
+
+This post is a short summary of a presentation by Ulf Wiger called
+["Death by accidental complexity"](http://www.infoq.com/presentations/Death-by-Accidental-Complexity).
+
+Parallel problems, like a server distributing constant strings, are very simple
+and easily parallelizable.  The complexity kicks in after the system has grown
+under the pressure of the requirements. Ulf Wiger has obviously dealt with
+such systems extensively. The presentations explores a number of issues that can
+(and do) bring highly concurrent and parallel systems to death.
+
+## Multiple messages
+
+You've got a mailbox and the whole world waiting to send you a message. You can
+either process the messages as they arrive, but then you must account for all
+of the possible orderings of events. Which should take approximately a lifetime.
+
+The other option is called 'selective message reception'. There are two option
+to process interleaving message streams selectively:
+
+- Have all of the messages go to different queues (sockets/channels/...). The
+  receiver is then able to choose the queue it's interested in.
+- Have all of the messages go to the same queue. The receiver is still able to
+  pick the specific messages from the queue.
+
+## Actors and POTS
+
+Actors in the system _cannot_ be synchronized globally (side note: there is a
+paper back from 1977 called 'Time, Clocks, and the Ordering of Events in a
+Distributed System' which actually contains an approximation for the total
+ordering of events in a distributed system).
+
+Ulf presents a toy application (called 'POTS' - Plain Ordinary Telephony
+System), basically a simulator for a simple telephony system with a GUI. It can
+be found @ [github](http://github.com/uwiger/pots).
+
+The original POTS implementation is done in FSM form. It's pretty
+straightforward - you've got nodes and a set of states the node can be in at
+any given moment (like `dialling` or `waiting_for_signal`). The code is quite
+clear, even if you're not fluent in Erlang.
+
+Then the rewrite using events is shown. Needless to say, the implementation
+which uses events is a lot more complicated due to the asynchronous nature of
+callbacks. It may not be obvious from the start, but the fact that callbacks
+cannot block _is_ the source of complexity.
+
+After doing the rewrite the number of states of the sample application has
+increased twofold (which is shown in a State-Event matrix (@~25:20)). The added
+states were hidden in the original FSM based implementation, but surfaced when
+examined in an asynchronous event-based perspective.
+
+Ulf also gives an example of a large system implemented in an event-based
+manner. The complexity has actually killed it.
+
+## Conclusion
+
+The goal of the presentation was to show that complexity in concurrency, states
+and events leads to unmanagable complexity in code which can bring death to
+projects. Concurrency based on events and callbacks which cannot block
+increases the size of a state-event matrix. As this matrix must be accounted
+for by every programmer, the entry to change gets higher and higher with each
+additional requirement while the codebase becomes unmaintainable. This
+complexity cannot be beaten by simple refactorings, but rather by going to a
+completely different concurrency model.
+
+Which one? The answer to this question wasn't in scope of this talk.
