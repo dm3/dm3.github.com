@@ -4,11 +4,12 @@ title: Scala conversions
 ---
 
 This post is composed of info on scala source desugaring originating from
-[this](http://old.nabble.com/creating-Tuples-td27887544.html#a27887544) thread.
+[this](http://old.nabble.com/creating-Tuples-td27887544.html#a27887544) thread.**
 I was afraid the information would be lost forever so, after a fight with
 markdown (tables, oh my...), below is the result.
 
-## Types
+**Types**
+
 |Source type           |                            Type|
 |:----------------------|--------------------------------:|
 |`Int => Int`            |     `Function1[Int, Int]`      |
@@ -17,7 +18,8 @@ markdown (tables, oh my...), below is the result.
 |`String <:< Test`       |       `<:<[String, Test]`      |
 
 
-## Values
+**Values**
+
 |Source value      |               Desugared                         |                      Type
 |:------------------|:-------------------------------------------------:|--------------------------------------:|
 |   `null`           |                   `Null`                          |              `Null`                    |
@@ -30,7 +32,7 @@ markdown (tables, oh my...), below is the result.
 |  `(5,6)`           |                `Tuple2(5,6)`                      |               `Tuple2[Int, Int]`       |
 |  `(7,8,9)`         |                `Tuple3(7,8,9)`                    |               `Tuple3[Int, Int, Int]`  |
 
-##Anonymous Function1
+**Anonymous Function1**
 
 {% highlight scala %}
 x: Int => x * 1
@@ -41,7 +43,7 @@ new Function1[Int, Int] {
 }
 {% endhighlight %}
 
-##Anonymous Function2
+**Anonymous Function2**
 
 {% highlight scala %}
 (_: Int) * (_: Int)
@@ -52,7 +54,7 @@ new Function1[Int, Int] {
 Type: Function2[Int, Int, Int]
 {% endhighlight %}
 
-#####Partial function explicitly typed as a Function1
+**Partial function explicitly typed as a Function1**
 
 {% highlight scala %}
 { case x: Int => x }: (Any => Int)
@@ -63,7 +65,7 @@ new Function1[Any, Int] {
 }
 {% endhighlight %}
 
-#####Partial function
+**Partial function**
 
 {% highlight scala %}
 { case x: Int => x }: PartialFunction[Any, Int]
@@ -75,7 +77,7 @@ new PartialFunction[Any, Int] {
 }
 {% endhighlight %}
 
-#####XML Syntax
+**XML Syntax**
 
 {% highlight scala %}
 <a:b><c></c></a:b>

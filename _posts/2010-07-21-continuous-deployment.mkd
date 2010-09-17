@@ -1,0 +1,79 @@
+---
+layout: post
+title: Continuous Deployment @IMVU (talk)
+---
+
+A great talk on
+[saucelabs](http://saucelabs.com/blog/index.php/2009/09/continuous-deployment—the-video/)
+about continuous deployment by Timothy Fitz. This topic received quite a lot of
+attention in the blogosphere over the last year. Many points have been made
+about where this actually works and whether it's actually viable to employ such
+a badass process, but the presentation actually addresses most of the issues.
+
+There were several points made about the general development practices (lean)
+which allow to use the CD process:
+
+1. Stop everything when the line breaks, also called
+[Jidoka](http://www.strategosinc.com/jidoka_1.htm) in the original lean Toyota
+environment it originated from. This way all of the problems will get
+addressed instantly instead of being pushed down the line.
+2. No developer/QA dichotomy - developers write _all_ tests:
+unit, integration and acceptance. And these tests _must_ be of the highest quality -
+as far as you are concerned, they are the only safety net between your changes
+to the codebase and the user experience.
+However, you still need an expert in the QA side of things to pair with the
+developers writing tests and guide/train them along the way.
+3. The environment should be automated and optimized to the extreme. Automatic
+tests at IMVU run for 6 hours. They distribute the tests over 40 machines and
+take the time down to 15 minutes.
+4. As we know people make mistakes - that's the human factor you cannot get rid
+   of. We also know that intelligent people learn from their mistakes. It's
+   pleasant to think of yourself as an intelligent person. Therefore, we should
+   try to learn from our mistakes whenever possible.
+
+   In the presenters experience, every single major technological improvement to
+   the process and to the product came from thoroughly analysing the problems and
+   tracing them to their causes.  You don't see that done everywhere: some
+   problems are just swept under the rug, some are worked around instead of
+   having their real cause being determined.
+5. Start. Just start doing something. Scared by the CD idea? Start with fully
+automating your CI. Don't even have the CI process? Start writing tests.
+
+##Questions
+*How does it work for safe/secure/mission critical systems?*
+> Design for continuous deployment. If you're developing a _really_ mission
+> critical system (atomic powerplant, anyone?) you can still deploy to a
+> production-like environment constantly.
+
+*Code coverage?*
+> As we know it doesn't really show anything about the quality of
+> your tests. Of course, teams having 90% coverage will _probably_ have higher
+> quality than those having 10% coverage. But that's just common sense.
+
+In my experience, increasing the coverage up to ~60% usually produces enough
+confidence to actually start refactoring the scariest piecies of code. However,
+I advise you to read
+[this](http://googletesting.blogspot.com/2010/07/code-coverage-goal-80-and-no-less.html)
+post and decide for yourself.
+
+*General advice?*
+> Fragment your product to continuously deploy on a feature basis.
+
+Way too many projects end up as a big ball of mud. Of course, these balls have
+different sizes and the mud they're composed of has different consistence, but
+breaking the project up into smaller fragments is essential for
+* Manageable build times
+* Rapid feedback from CI suite
+* Fast development process
+
+> Some features (like integration with third party software) cannot be
+> continuously deployed. Take that as a sad fact of life.
+
+Which doesn't mean you shouldn't try deploying to a production-like environment
+(same as with mission-critical systems).
+
+##Conclusion?
+Continuous deployment may or may not suite you. It may seem too scary or absurd
+to employ CD given your system and your requirements, but, in my opinion, the
+practices brought up in this talk are valuable and deserve to be applied even
+out of the context of CD.
