@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Death by Accidental Complexity
+title: Death by Accidental Complexity (talk)
 ---
 
 This post is a short summary of a presentation by Ulf Wiger called
