@@ -6,7 +6,7 @@ title: Scala conversions
 This post is composed of info on scala source desugaring originating from
 [this](http://old.nabble.com/creating-Tuples-td27887544.html#a27887544) thread.
 I was afraid the information would be lost forever so here's what I managed to
-salvage, after a fight with markdown (tables, oh my...).
+salvage after a fight with markdown (tables, oh my...).
 
 **Types**
 
