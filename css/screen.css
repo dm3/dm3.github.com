@@ -135,3 +135,36 @@ ul.posts span {
     padding: 0 1em;
     margin: 0 1em 1.5em;
 }
+
+#post table {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    /* border: 1px solid #666666; */
+    border-collapse: collapse;
+}
+
+#post table th {
+    background-color: #666666;
+    color: #FFFFFF;
+    border-width: 1px 1px 2px;
+    border: 1px solid #666666;
+    border-bottom: 1px solid #FFFFFF;
+    padding: 0.25em 1em;
+}
+
+#post table td {
+    padding: 0.25em 1em;
+    border: 1px solid #666666;
+}
+
+#post hr {
+    color: #666666;
+    background-color: #666666;
+    height: 0.25em;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1.5em;
+    text-align: center;
+}

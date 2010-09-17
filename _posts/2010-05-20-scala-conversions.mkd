@@ -1,0 +1,98 @@
+---
+layout: post
+title: Scala conversions
+---
+
+This post is composed of info on scala source desugaring originating from
+[this](http://old.nabble.com/creating-Tuples-td27887544.html#a27887544) thread.
+I was afraid the information would be lost forever so, after a fight with
+markdown (tables, oh my...), below is the result.
+
+## Types
+|Source type           |                            Type|
+|:----------------------|--------------------------------:|
+|`Int => Int`            |     `Function1[Int, Int]`      |
+|`(Int, Int, Int) => Int`| `Function3[Int, Int, Int, Int]`|
+|`(String, Int)`         |     `Tuple2[String, Int]`      |
+|`String <:< Test`       |       `<:<[String, Test]`      |
+
+
+## Values
+|Source value      |               Desugared                         |                      Type
+|:------------------|:-------------------------------------------------:|--------------------------------------:|
+|   `null`           |                   `Null`                          |              `Null`                    |
+|   `()`             |                   `()`                            |              `Unit`                    |
+|    `1`             |                   `1`                           |              `Int`                     |
+|   `2.0f`           |                    `2.0f`                         |                 `Float`                |
+|   `3.0`            |                    `3.0`                          |                 `Double`               |
+| `"hello"`          |                   `"hello"`                       |                 `String`               |
+|   `'d`             |                `Symbol("d")`                      |                 `Symbol`               |
+|  `(5,6)`           |                `Tuple2(5,6)`                      |               `Tuple2[Int, Int]`       |
+|  `(7,8,9)`         |                `Tuple3(7,8,9)`                    |               `Tuple3[Int, Int, Int]`  |
+
+##Anonymous Function1
+
+{% highlight scala %}
+x: Int => x * 1
+
+// desugared
+new Function1[Int, Int] {
+    def apply(x: Int): Int = x * 1
+}
+{% endhighlight %}
+
+##Anonymous Function2
+
+{% highlight scala %}
+(_: Int) * (_: Int)
+
+// desugared
+(x1: Int, x2: Int) => x1 * x2
+
+Type: Function2[Int, Int, Int]
+{% endhighlight %}
+
+#####Partial function explicitly typed as a Function1
+
+{% highlight scala %}
+{ case x: Int => x }: (Any => Int)
+
+// desugared
+new Function1[Any, Int] {
+   def apply(x: Any) = x match { case x: Int => x}
+}
+{% endhighlight %}
+
+#####Partial function
+
+{% highlight scala %}
+{ case x: Int => x }: PartialFunction[Any, Int]
+
+// desugared
+new PartialFunction[Any, Int] {
+   def apply(x: Any) = x match { case x: Int => x}
+   def isDefinedAt(x: Any) = x match { case x: Int => true; case _ => false}
+}
+{% endhighlight %}
+
+#####XML Syntax
+
+{% highlight scala %}
+<a:b><c></c></a:b>
+
+// desugared
+new xml.Elem("a", "b", null, xml.TopScope,
+new xml.Elem(null, "c", null, xml.TopScope))
+
+Type: xml.Elem
+{% endhighlight %}
+
+Thanks to:
+
+* David Flemstrom
+* Johannes Rudolph
+* Jason Zaugg
+
+-----------------------------------------------------------------------
+This information is true as of scala 2.7. Having said that, the desugarings in
+2.8 shouldn't have changed too much.
