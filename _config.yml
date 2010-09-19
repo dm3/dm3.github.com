@@ -1,1 +1,5 @@
 pygments: true
+
+url: http://dm3.github.com #for sitemap
+description: Software development blog @dm3.
+keywords: blog, software, jvm, java, scala, talks
