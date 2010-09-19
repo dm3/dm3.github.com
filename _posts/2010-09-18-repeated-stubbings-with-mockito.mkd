@@ -1,0 +1,233 @@
+---
+layout: post
+title: Repeated stubbings with Mockito
+---
+
+I've used mockito for almost two years - it has always been (and is) a pleasant
+experience.  The library is well thought-out, has close to zero bugs and, I
+believe, became a de-facto standard for mock/stub/verification based testing in
+Java-land.
+
+Today I've encountered a use case when `Mockito` couldn't help me reduce
+boilerplate for the first time (well, maybe I am exaggerating, but only a
+tiny bit).
+
+##The Use Case
+Consider the following interface:
+
+{% highlight java %}
+interface Repository<G> {
+
+    /**
+     * @return true if the value with the given name exists in the
+     *         repository
+     */
+    boolean has(String name);
+
+    /**
+     * @return true if the value with the given type exists in the
+     *         repository
+     */
+    boolean has(Type type);
+
+    /**
+     * @return the value of the given name
+     * @throws IllegalArgumentException if value with the given
+     *         name doesn't exist
+     */
+    G get(String name);
+
+    /**
+     * @return the value of the given type
+     * @throws IllegalArgumentException if value with the given
+     *         type doesn't exist
+     */
+    G get(Type type);
+}
+{% endhighlight %}
+
+And the test:
+
+{% highlight java %}
+class FinderTest {
+
+    private Repository<Object> repo;
+
+    @Before
+    public void before() {
+        repo = mock(Repository.class);
+    }
+
+    shouldGetTheValueByTypeIfNotFoundByName() {
+        Type t = Object.class;
+        Object value = new Object();
+        given(repo.has(t)).willReturn(true);
+        given(repo.get(t)).willReturn(value);
+
+        Object result = new Finder("x", t).findIn(repo);
+
+        assertThat(result, sameInstance(value));
+    }
+
+}
+{% endhighlight %}
+
+The test is very simple. We're testing a `Finder` which is a strategy of
+searching in the repository. First, we stub the `Repository#has(Type)` and
+`Repository#get(Type)` methods so that they would produce results, then we
+create a `Finder` and let it use our mock.
+
+You can see, that we didn't mock the `Repository#has(String)`/`#get(String)`
+methods as the default behaviour for `has` methods (specifically `return
+false`) is provided by Mockitos' default stubbing behaviour. You don't need to
+specify it explicitly in your tests.
+
+The default behaviour for the methods returning non-void values is to return
+nulls. That's what our mock is going to do when the `#get(String)` method is
+called.
+
+## Off topic
+Purists might argue that one should specify all of the conditions and
+leave nothing implicit in the test. This is usually true and I'm all for
+following this practice. Having said that, in this case - a case of well
+defined behaviour imposed by a framework - I allow the default behaviour to
+remain implicit and rely on the reader to know what's happening in between the
+lines.
+
+## The problem
+At this point an astute reader might notice that the test doesn't honour the
+contract declared by the interface of the `Repository`. As stated in javadoc for
+the `get` methods, they should be throwing exceptions (unchecked ones) when the
+results are impossible to acquire (when corresponding `has` methods return false).
+
+By default Mockito returns `null` for method calls with non-void return values
+on mocked objects. So, the code in the following snippet would actually pass
+our test. However, when given a well-behaved `Repository`, the same code would
+fail with an `IllegalArgumentException` thrown in the first line of the
+`findIn` method.
+
+{% highlight java %}
+public class Finder {
+    private final String name;
+    private final Type type;
+
+    public Finder(String name, Type type) {
+        this.name = name; this.type = type;
+    }
+
+    public <G> G findIn(Repository<G> repo) {
+        G byName = repo.get(name);
+        return byName == null ? repo.get(type) : byName;
+    }
+}
+{% endhighlight %}
+
+It's obvious that we should consider the behaviour specified in the contract
+(in our case - javadoc) superior to the non-specified one; when mocking a
+`Repository`, we should be throwing `IllegalArgumentExceptions` as the default
+behaviour, instead of returning `nulls`.
+
+## The solution
+So, what's the problem? Just create a `@Before` method in the test case, put
+the common stubbing inside of it, and be done with the task!
+
+{% highlight java %}
+@Before
+public void before() {
+    repo = mock(Repository.class);
+    given(repo.get(anyString())).willThrow(new IllegalArgumentException());
+    given(repo.get(any(Type.class))).willThrow(new IllegalArgumentException());
+}
+{% endhighlight %}
+
+However, there's one significant problem with this approach - there's no way to
+override the behaviour of mocks after they have been stubbed with exceptions. This
+is contrary to the Mockito [documentation](http://mockito.org/) which states
+that the stubbings are overridable:
+
+> Stubbing can be overridden: for example common stubbing can go to fixture
+> setup but the test methods can override it. Please note that overridding
+> stubbing is a potential code smell that points out too much stubbing.
+
+Now, having the above code in place you can't write any meaningful tests as you
+can't restub the `Repository#get` methods to return values instead of throwing
+exceptions.
+
+I've also tried another approach to providing default behaviour to mocks
+described
+[here](http://mockito.googlecode.com/svn/tags/latest/javadoc/org/mockito/Mockito.html#14).
+It didn't work as the internal stubbing mechanism is the same as in the
+previous example. Once you've told a mock to throw an exception - it is going
+to throw it no matter what.
+
+## Why, oh why?
+The problem lies in the way restubbing (or stubbing "override") works in
+Mockito. Or, to be exact, how it doesn't. Basically, there's no special support
+for "overrides" - when you say
+
+{% highlight java linenos %}
+given(repo.get(anyString())).willReturn(1);
+given(repo.get(anyString())).willReturn(2);
+{% endhighlight %}
+
+a call to `repo.get` on the second line will actually return `1` and the mocked
+`repo` object will be restubbed with `2`. There's no magic happening behind the
+scenes.
+
+It's quite natural if you think about it - how should Mockito know that the
+call on the second line happens during a restubbing and not inside of the code
+under test?
+
+I didn't go too deep into Mockito internals to figure out the state it keeps
+when matchers like `anyString` get called. I can only speculate that it might
+have been possible to make the restubbing work in the above case by relying on
+some internal state of the ongoing matcher invocations. However, when faced
+with the following:
+
+{% highlight java linenos %}
+given(repo.get("a")).willReturn(1);
+given(repo.get("a")).willReturn(2);
+{% endhighlight %}
+
+we lose even the information we could have had about matchers. `repo.get("a")`
+will be the first call on the second line (unlike the previous example where
+the call to `anyString()` was the first one).
+
+## It works! Kind of...
+The only scenario where overriding `#willThrow`/`#thenThrow` is possible is when
+
+* the arguments to the second stubbing don't match the arguments to the first one
+* the first stubbing doesn't use `any*` matchers
+
+It's logical, but don't get surprised by the following:
+
+{% highlight java linenos %}
+given(repo.get("a")).willThrow(new IllegalArgumentException());
+given(repo.get(anyString())).willReturn(2);
+{% endhighlight %}
+
+The above example works, and you might think that the call to `anyString()` on
+the second line means something special in the context of repeated stubbing.
+
+It doesn't. The call to `anyString()` returns `""` which is different to `"a"`
+and doesn't trigger the first stubbing.  If you change the argument provided to
+`repo.get` on the first line to `""`, the second line will fail with an
+`IllegalArgumentException` thrown by the mock, like in the following snippet:
+
+{% highlight java linenos %}
+given(repo.get("")).willThrow(new IllegalArgumentException());
+given(repo.get(anyString())).willReturn(2);
+{% endhighlight %}
+
+##Conclusion
+I had to resort to stubbing all of the `#get` methods in-place (inside of the
+tests) which led to _some_ duplication (there were more `#get` methods in the
+real code, than in the snippets I've posted here).
+
+One more thing to know...
+
+##TLDR
+You can't override stubbing of Mockito mocks if you've already stubbed them
+with `#willThrow`/`#thenThrow`, because stubbed invocations will produce the
+result they were stubbed with when called with the arguments matching those
+declared while stubbing.
