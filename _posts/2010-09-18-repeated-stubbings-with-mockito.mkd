@@ -3,10 +3,10 @@ layout: post
 title: Repeated stubbings with Mockito
 ---
 
-I've used mockito for almost two years - it has always been (and is) a pleasant
-experience.  The library is well thought-out, has close to zero bugs and, I
-believe, became a de-facto standard for mock/stub/verification based testing in
-Java-land.
+I've used [Mockito](http://mockito.org/) for almost two years - it has always
+been (and is) a pleasant experience.  The library is well thought-out, has
+close to zero bugs and, I believe, became a de-facto standard for
+mock/stub/verification based testing in Java-land.
 
 Today I've encountered a use case when `Mockito` couldn't help me reduce
 boilerplate for the first time (well, maybe I am exaggerating, but only a
@@ -128,7 +128,7 @@ It's obvious that we should consider the behaviour specified in the contract
 behaviour, instead of returning `nulls`.
 
 ## The solution
-So, what's the problem? Just create a `@Before` method in the test case, put
+So, what's the hassle? Just create a `@Before` method in the test case, put
 the common stubbing inside of it, and be done with the task!
 
 {% highlight java %}
