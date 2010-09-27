@@ -1,5 +1,8 @@
 pygments: true
 
-url: http://dm3.github.com #for sitemap
-description: Software development blog @dm3.
-keywords: blog, software, jvm, java, scala, talks
+author: Vadim Platonov
+email: deadmoro3@gmail.com
+url: http://dm3.github.com
+title: Software development blog @dm3
+description: Software development blog @dm3
+keywords: blog, software, jvm, java, scala, talks, functional, oo
