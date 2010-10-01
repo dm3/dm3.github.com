@@ -58,7 +58,8 @@ class FinderTest {
         repo = mock(Repository.class);
     }
 
-    shouldGetTheValueByTypeIfNotFoundByName() {
+    @Test
+    public void shouldGetTheValueByTypeIfNotFoundByName() {
         Type t = Object.class;
         Object value = new Object();
         given(repo.has(t)).willReturn(true);
