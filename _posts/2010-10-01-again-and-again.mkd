@@ -4,5 +4,5 @@ title: Again and Again
 ---
 
 Tony Morris did a repost on [reinvention of the wheel](http://blog.tmorris.net/reversejar/)
-by us, ordinary enterprise developers. I'm not sure why the post is called
-**reverse.jar**, but the idea is right to the point where it hurts.
+by us, ordinary enterprise developers. It's sad, but the idea is right to the
+point where it hurts.
