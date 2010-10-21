@@ -1,11 +1,11 @@
 ---
 layout: post
-title: Misc Unix Utilities: Rdjpgcom
+title: Misc Unix Utilities - Rdjpgcom
 ---
 
-Named in the best traditions of unix (no wonder I can never remember the damned
-name), [rdjpgcom](http://linux.about.com/library/cmd/blcmdl1_rdjpgcom.htm) is a
-utility which can tell you the width and height of the JPG file!
+Named in the best traditions of unix (no wonder I can never remember the damned name),
+[rdjpgcom](http://linux.about.com/library/cmd/blcmdl1_rdjpgcom.htm) is a
+utility which can tell you the width and the height of the JPG file!
 
 From the man entry:
 
