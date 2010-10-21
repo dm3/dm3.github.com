@@ -1,0 +1,16 @@
+---
+layout: post
+title: Misc Unix Utilities: Rdjpgcom
+---
+
+Named in the best traditions of unix (no wonder I can never remember the damned
+name), [rdjpgcom](http://linux.about.com/library/cmd/blcmdl1_rdjpgcom.htm) is a
+utility which can tell you the width and height of the JPG file!
+
+From the man entry:
+
+> rdjpgcom reads the named JPEG/JFIF file, or the standard input if no file is
+> named, and prints any text comments found in the file on the standard output.
+
+Comes handy when you don't have access to ImageMagicks excellent
+[identify](http://www.imagemagick.org/script/identify.php).
