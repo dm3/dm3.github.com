@@ -1,0 +1,303 @@
+---
+layout: post
+title: Separating Process and Data
+---
+
+Writing plain old Java doesn't present you with many opportunities of
+higher-order abstraction. Don't get me wrong - all these heavyweight classes and
+OO cruft force you to abstract, just not in the way which is essentially
+reusable. Abstractions are implemented in a more informal and flaky way. You can
+achieve reuse across a set of functionality, across a package; maybe across a
+module, in the best case - across an application. But what should we do to get
+the most of it? How should we structure programs we are writing now to be able
+to reuse them in programs we are going to write tomorrow?
+
+If we forget about the limitations of the language for a minute, we'll see that
+the possibilities to abstract stay the same wherever we look. However,
+possibilities themselves aren't worth anything if they aren't exploited. This
+post is an observation of how the process of abstraction (namely, through the
+separation of process and data) happens when you know what to look for and keep
+your eyes open.
+
+## Context is Everything
+
+The beautiful thing about powerful abstractions is - they are really simple.
+It's amazing how often we overlook these 'patterns' and fundamental concepts
+and settle for suboptimal solutions.
+
+Consider the following snippet (originally code was a tad more complicated,
+I've cleaned it up for the sake of this example):
+
+{% highlight java %}
+G synthesize(Type type, GeneratorRepository<G> repo) {
+    if (type instanceof ParameterizedType) {
+        Type[] params = type.getActualTypeArguments();
+        List<G> components = new ArrayList<G>(params.length);
+        for (Type param : params) {
+            if (shouldBeSynthesized(param, repo)) {
+                components.add(synthesize(param, repo));
+            } else {
+                components.add(repo.getComponentFor(param));
+            }
+        }
+        return repo.getSynthetic(type, components);
+    }
+    return repo.getComponentFor(param);
+}
+{% endhighlight %}
+
+First of all, I should make clear what I am trying to achieve here. This code
+belongs to the [jquickcheck](http://github.com/dm3/jquickcheck) library - an
+attempt in tight integration between the implementations of
+[QuickCheck](http://en.wikipedia.org/wiki/QuickCheck) and Java. The whole
+responsibility of the above snippet is in creating random value generators of
+type `G` for the given `Type`.
+
+As you can see, in case of `ParameterizedType` we need to create generators for
+each type component of the parameterized type and then create the final
+generator with a call to `repo.getSynthetic`. For example, to produce a value
+of `List<Integer>` we would need to know how to produce `Integers` as well as
+`Lists`. Thus, for a `ParameterizedType` of `List<Integer>` we would create a
+random value generator of its type argument, stored in the `components`
+variable, and only then would we call `repo.getSynthetic(type, components)` to
+create the final random value generator of type `List<Integer>`.
+
+As for other functions, `shouldBeSynthesized` tells if creation of a generator
+for the given type needs other generators to be possible, while
+`repo.getComponentFor` returns a random value generator for the type which
+doesn't need other generators<sup>1</sup>.
+
+Aside from this being a verbose block of code, we can notice some structure in
+the process going on inside of it. Specifically, the `synthesize` method
+generates a tree-recursive process which results in the argument of type `Type`
+collapsed into a value of type `G`. The implementation seemed ok at the time I
+wrote it, didn't have any second thoughts about it.
+
+## A Case of Duplication
+
+However, when implementing another feature a need emerged to be able to find
+out whether the given `Type` can be transformed into a `G`.
+
+A hack which immediately popped into my head:
+
+{% highlight java %}
+boolean canSynthesize(Type type, GeneratorRepository<G> repo) {
+    try {
+        return synthesize(type, repo) != null;
+    } catch (Exception e) {}
+
+    return false;
+}
+{% endhighlight %}
+
+did not pass the subconscious hack-filter, so a better solution was due.
+After the first iteration over the code I had this:
+
+{% highlight java %}
+G canSynthesize(Type type, GeneratorRepository<G> repo) {
+    if (type instanceof ParameterizedType) {
+        Type[] params = type.getActualTypeArguments();
+        boolean result = false;
+        for (Type param : params) {
+            if (shouldBeSynthesized(param, repo)) {
+                result &= canSynthesize(param, repo);
+            } else {
+                result &= repo.hasComponentFor(param);
+            }
+        }
+        return result;
+    }
+    return repo.hasComponentFor(type);
+}
+{% endhighlight %}
+
+The only positive thing about this code is that it works. Other than that, the
+above code duplicates the previous snippet almost entirely, the only noticeable
+differences being
+
+* the call to `hasComponentFor` instead of the `getComponentFor`
+* the accumulation of the result in the boolean instead of a list
+
+However, given these differences it's impossible to straightforwardly refactor
+the code to eliminate duplication. To do the refactoring we would need to
+abstract over iteration, result aggregation and a call to `hasComponentFor/getComponentFor`.
+
+## On the Path to Enlightenment
+
+But how would we handle such a task?! The aggregation logic seems to be
+inseparable from the process of traversing the type arguments of the
+`ParameterizedType`.
+
+This question, however, indicates a solution; remember what was said about the
+tree-recursive process? Well, let's make the structure of the process explicit!
+
+{% highlight java %}
+// note that the tree is immutable
+class TypeTree {
+    private final List<TypeTree> children;
+    final Type type;
+
+    TypeTree(Type type, List<TypeTree> children) {
+        this.type = type;
+        // not doing a defensive copy as this is package visible
+        this.children = children;
+    }
+
+}
+{% endhighlight %}
+
+We have a tree data structure which isn't really generic or reusable, but
+it will fit our needs for the time being. Now, having the first stone in place,
+lets copy the `synthesize` method (call it `makeTree`) and make its sole
+responsibility gathering the type hierarchy of the argument `ParameterizedType`
+into a `TypeTree`.
+
+{% highlight java %}
+// we only handle Parameterized and simple Types
+static <G> TypeTree makeTree(Type type, GeneratorRepository<G> repo) {
+    if (type instanceof ParameterizedType) {
+        List<TypeTree> result = makeTrees(((ParameterizedType) type), repo);
+        return new TypeTree(type, result);
+    }
+    return new TypeTree(type, Collections.<TypeTree> emptyList());
+}
+
+private static <G> List<TypeTree> makeTrees(ParameterizedType type, GeneratorRepository<G> repo) {
+    Type[] params = ((ParameterizedType) type).getActualTypeArguments();
+    List<TypeTree> result = new ArrayList<TypeTree>();
+    for (Type param : params) {
+        if (shouldBeSynthesized(param, repo)) {
+            result.add(makeTree(param, repo));
+        }
+    }
+    return result;
+}
+{% endhighlight %}
+
+Now it seems that we're on the right path to getting rid of `synthesize` and
+`canSynthesize`. We seem to have abstracted the process and captured the result
+in a `TypeTree`. But how do we get the final result? In other words: how do we
+fold the `TypeTree` back into a value?
+
+## Getting the Results
+
+The cleanest solution I could come up with in Java was the visitor pattern
+which required some modifications to the `TypeTree`:
+
+{% highlight java %}
+class TypeTree<T> {
+    // same as above
+    // ...
+
+    T accept(Visitor<T> v) {
+        List<T> results = new ArrayList<T>(children.size()):
+        for (TypeTree<T> child : children) {
+            results.add(child.accept(v));
+        }
+        return v.visit(type, results);
+    }
+}
+{% endhighlight %}
+
+As you can see, we've added a type parameter to the type tree (which represents
+the type of the result we want to get: `G` for the `synthesize` and `Boolean`
+for `canSynthesize`). We also need a `Visitor` which will be accepted by the tree
+and will go up to the root collecting the results along the way:
+
+{% highlight java %}
+interface Visitor<T> {
+    T visit(Type t, List<T> childResults);
+}
+{% endhighlight %}
+
+This is a simple implementation which will accept the type of the currently
+accessed node of the tree and results collected from all of its child nodes.
+
+Now, we can express `synthesize` as:
+
+{% highlight java %}
+class CreateGenVisitor<G> implements Visitor<G> {
+    private final GeneratorRepository<G> repo;
+    CreateGenVisitor(GeneratorRepository<G> repo) { this.repo = repo; }
+
+    @Override
+    public G visit(Type t, List<G> childResults) {
+        if (childResults.isEmpty()) {
+            return repo.getComponentFor(t);
+        }
+        return repo.getSynthetic(t, childResults);
+    }
+}
+
+G synthesize(ParameterizedType type, GeneratorRepository<G> repo) {
+    return makeTree(type, repo).visit(new CreateGenVisitor<G>(repo));
+}
+{% endhighlight %}
+
+And `canSynthesize` as:
+
+{% highlight java %}
+class CanConstructVisitor<G> implements Visitor<Boolean> {
+    private final GeneratorRepository<G> repo;
+    CanConstructVisitor(GeneratorRepository<G> repo) { this.repo = repo; }
+
+    @Override
+    public Boolean visit(Type t, List<Boolean> childResults) {
+        if (childResults.isEmpty()) {
+            return repo.hasComponentFor(t);
+        }
+        return repo.hasComponentFor(t) && allTrue(childResults);
+    }
+
+    private boolean allTrue(Iterable<Boolean> xs) {
+        for (Boolean x: xs) {
+            if (!x) { return false; }
+        }
+        return true;
+    }
+}
+
+boolean canSynthesize(ParameterizedType type, GeneratorRepository<G> repo) {
+    return makeTree(type, repo).visit(new CanConstructVisitor<G>(repo));
+}
+{% endhighlight %}
+
+The amount of code actually increased, but the duplication is gone<sup>2</sup>.
+Every piece is only concerned with its own job: iteration is done separately
+from aggregation and construction of the result.
+
+## Conclusions
+
+So, what can we carry out of this encounter?
+
+**Strive to make your data explicit**
+
+The more I program and model, the more I see the truthfulness of the above
+statement. Seemingly trivial, this advice can lead to many deep insights when
+applied in practice. In particular, it will help you to
+
+**Separate data and process**
+
+Separating data and process lets you abstract the operations on data to be
+suitable for _any_ process, not just the one you're implementing in the given
+scenario. Obviously, this leads to increased reuse and reduction in
+duplication. Remember how we managed to reuse the `TypeTree` which isn't
+even generic enough to be reused in other contexts? Imagine how our life would
+have been easier if we had a generic `Tree` and the ability to pattern-match on
+its structure...
+
+**Compositionality is the king**
+
+It is much easier to construct a program out of a bunch of simple and
+well-tested data parts by gluing them all together with a process than out of
+functions which have the state intermingled with the process.
+
+---------------
+1. Please, don't focus on specifics of this example, as the original code has a
+   lot more details which were dropped while adapting it for this post.
+2. The definitions of `synthesize` and `canSynthesize` in the above snippets
+   won't compile when put together with the definition of `makeTree` in this post
+   as we haven't modified the `makeTree` after we have added the type argument to
+   the `TypeTree`. To make it compile,  modify the `makeTree` to accept a
+   TypeTree with an additional type argument (or just subvert the type system
+   and cast to raw types everywhere).
