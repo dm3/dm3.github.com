@@ -49,9 +49,17 @@ p.meta {
     color: #BBBBBB;
 }
 
-#header a {
+#header a.caption {
     color: #FFFFFF;
     text-decoration: none;
+}
+
+#header a.rss {
+    background: url("../img/rss.png") no-repeat scroll 0 0 transparent;
+    display: block;
+    float: right;
+    height: 32px;
+    width: 32px;
 }
 
 a:visited, a:link, a:active {
