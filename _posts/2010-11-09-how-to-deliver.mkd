@@ -1,0 +1,23 @@
+---
+layout: post
+title: How to Get a Chance to Deliver
+---
+
+A great post on
+[agile warrior](http://agilewarrior.wordpress.com/2010/11/06/the-agile-inception-deck/)
+about the questions which absolutely _have_ to be asked (and answered) in order
+for a successful project to take off. We've heard all of it before, however the
+post serves as a nice summary and food for thought if taken figuratively and an
+applicable technique if taken literally.
+
+We can even summarize the ten points further by distilling the main parts:
+
+1. _Why_ are we building the thing we're building?
+2. What _exactly_ are we building?
+    - a free-text paragraph
+    - a pitch + 2-3 short points
+3. What exactly are we _not_ building?
+4. Marketing strategy - _whom_ should we be talking to?
+5. Architectural overview - _how_ are we going to build it?
+6. Risk analysis - _why_ can we _fail_?
+7. High-level estimate - _how much_ is it going to cost?
