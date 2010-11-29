@@ -232,3 +232,8 @@ You can't override stubbing of Mockito mocks if you've already stubbed them
 with `#willThrow`/`#thenThrow`, because stubbed invocations will produce the
 result they were stubbed with when called with the arguments matching those
 declared while stubbing.
+
+##Edit
+You *can* override the 'throw' stubbing using the alternative Mockito syntax
+involving `doThrow/doReturn` which completely escaped me when I wrote this
+post.
