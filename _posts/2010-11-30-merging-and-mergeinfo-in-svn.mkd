@@ -1,0 +1,411 @@
+---
+layout: post
+title: Merging and Mergeinfo in SVN
+---
+
+In this post I'll try to explain how SVN merges work visually. This post isn't
+about the inner workings of the `svn merge` command, but about the
+`svn:mergeinfo` property and common merge scenarios faced by developers using
+SVN as their version control system. As I've noticed, this topic is quite
+confusing for people who aren't used to SVN: either coming from a no-VCS
+background or from a distributed VCS one.
+
+It's quite easy to grasp the concept of merging - reading
+[svnbook](http://svnbook.red-bean.com/en/1.5/svn.branchmerge.html) should make
+the behaviour of SVN in simple merge scenarios pretty clear. You can follow the
+post along with a sample repository such as
+[google-code](http://code.google.com/intl/lt/projecthosting/).
+
+## Basic branching
+
+![Basic branching](/post_img/basic.png)
+
+This is the simplest scenario. You branch a feature branch and then reintegrate
+it into trunk some time later.
+
+First, let's create a branch:
+
+    svn copy trunk branches/feature -m 'created branch'
+    > Committed revision 10
+    cd branches
+    svn co branches/feature -q
+
+then work on it:
+
+    cd feature
+    mkdir dir
+    echo "text" > dir/data.txt
+    svn add dir
+    ... more work
+    svn ci -m 'finished'
+    > Committed revision 50
+
+then merge it back (reintegrate) to trunk:
+
+    cd ../../trunk
+    svn merge branches/feature
+    > --- Merging r10 through r50 into '.':
+    > A    dir
+    > A    dir/data.txt
+    svn ci -m 'merged r10-50 from feature branch'
+    > Committed revision 51
+
+And we're done!
+
+This scenario is perfectly covered in the svn reference, so I won't delve into
+it any further. However, there are other related topics which are worth
+exploring.
+
+## Mergeinfo property
+
+For the sake of experiment, let's try repeating the reintegration step:
+
+    svn merge branches/feature
+
+And SVN behaves correctly - nothing happens as all of the changes from the
+`feature` branch already sit in the `trunk`. SVN knows that by keeping the
+history of merges in the `svn:mergeinfo` property which can be assigned to any
+file or directory tracked by SVN within the working copy. Let's look at the
+value of this property on the `trunk` folder:
+
+    svn pg svn:mergeinfo .
+    > /branches/feature:11-50
+
+Now we know, that revisions from 11 (inclusive) up to 50 were merged to the
+current directory (`trunk`) from the url with path `branches/feature`. Now,
+let's try removing the `mergeinfo` property and re-doing the merge:
+
+    svn pd svn:mergeinfo .
+    svn merge branches/feature
+    > --- Merging r10 through r50 into '.':
+    > C dir
+    > Summary of conflicts:
+    >   Tree conflicts: 1
+
+SVN tried to merge the same revision range once again and found that the
+directory which was added in the `feature` branch already exists in `trunk`. It
+has no way of telling that this directory is the same exact directory with the
+same exact contents as the one in the `feature` branch, therefore we are
+presented with a conflict.
+
+It is worth noting that if the changeset applied by revisions 10-50 didn't
+modify the tree structure and no conflicting changes appeared in the trunk
+after we've deleted the `mergeinfo` property, the second `svn merge` would
+result in restoration of the property and no textual changes (or conflicts for
+that matter).
+
+It is also crucial to understand that changes to SVN properties are tracked
+similarly to textual or tree changes. If you merge an URL which already has SVN
+properties, the properties will be merged into your working copy _and_ might
+cause conflicts.
+
+## SVN mergeinfo
+
+Another command which can help you when dealing with `mergeinfo` is called...
+`mergeinfo`! Let's try it out.
+
+    svn mergeinfo --show-revs eligilble branches/feature
+
+Which did nothing because we have already merged all of the revisions from the
+`feature` branch.
+
+    svn mergeinfo --show-revs merged branches/feature
+    > r10
+    > ...
+    > r50
+
+Now, if we delete the `mergeinfo` property, we'll see that
+`mergeinfo --show-revs eligible` show us the `r10 .. r50` revision range while
+`mergeinfo --show-revs merged` doesn't show us anything.  To see both merged
+and eligible revisions we can do:
+
+    svn mergeinfo branches/feature
+    > Path: branches/feature
+    >   Source path: /trunk
+    >       Merged ranges: r10:50
+    >       Eligible ranges:
+
+At least that's what the documentation says it's supposed to show. The
+client I'm working with (version 1.6.12) returns the output of
+`svn mergeinfo --show-revs merged`.
+
+## Merge command
+
+Let's delve into the `merge` command. After all, we've only seen its most basic
+instantiation:
+
+    svn merge branches/feature
+
+Actually it's the same as
+
+    svn merge -r10:HEAD branches/feature
+
+or
+
+    svn merge -r10:50 branches/feature
+
+or even
+
+    svn merge -r1:HEAD branches/feature
+
+The last one works, because SVN knows that the `feature` branch was copied from
+the `trunk` at r10. In other words, `feature` branch and `trunk` share history
+up to r10.
+
+Amazingly, the commands do not end here. We can also do
+
+    svn merge trunk branches/feature
+    > --- Merging differences between repository URLs into '.':
+
+which will compute the difference between `trunk` and `branches/feature` and
+apply it to the working copy.  The above command can be rewritten with the
+specific revisions appended to URLs with the `@`:
+
+    svn merge trunk@10 branches/feature@50
+
+The main difference between using a 2-URL merge and a revision range merge can
+be guessed from their names:
+
+* 2-URL merge computes the difference between two URLs
+* Revision range merges computes the difference between two revisions of the
+  same URL
+
+Both `merge` variants will compute correct `mergeinfo` properties, however the
+use cases for 2-URL and revision range merges differ as we'll see later on.
+
+One more thing to note is the `--reintegrate` option to `svn merge` which
+became available in the 1.5 version of SVN. This adds another equivalent merge
+command to our repertoire:
+
+    svn merge --reintegrate branches/feature
+
+which will compute correct revision numbers and execute the 2-URL merge command
+behind the covers<sup>1</sup>.
+
+Now, having exercised our merge skill, let's hop back to more sophisticated
+merge scenarios.
+
+## Staying up to date
+
+![Staying up to date](/post_img/stayingup.png)
+
+Suppose your feature touches large part of the system and takes more than a day
+to implement. Other developers got their access to reddit firewalled, so they
+started actively committing their features to `trunk`. In order to stay up to
+date (and not have horrendous headaches when reintegrating back to `trunk`) you
+need to periodically merge changes from `trunk` to your `feature` branch.
+
+We'll start by creating the `feature` branch:
+
+    svn copy trunk branches/feature
+    cd branches
+    svn co branches/feature
+    cd feature
+    ... work
+
+then we'll pull the changes from `trunk`:
+
+    svn merge trunk
+    > --- Merging r10 through r20 into '.':
+    ... changes
+    svn ci -m 'Merged revisions 10-20 from trunk'
+
+and pull the changes from `trunk`, again:
+
+    svn merge trunk
+    > --- Merging r25 through r30 into '.':
+    ... changes
+    svn ci -m 'Merged revisions 25-30 from trunk'
+
+Note, that we didn't have to specify any revisions, SVN knows that it only has
+to merge revisions which weren't already merged or which do not belong to the
+shared history of `trunk` and `feature` branches.
+
+After finishing our work we reintegrate:
+
+    cd ../../trunk
+    svn merge --reintegrate branches/feature
+
+which is equivalent to:
+
+    svn merge trunk@30 branches/feature
+
+as r30 is the last revision merged from trunk to the `feature` branch.
+
+### Where the need for 2-URL merges comes from
+
+Let's take a closer look at what happens during reintegration and why we need
+to use the 2-URL merge command. We'll continue with the example started in the
+previous section.
+
+![Reintegration](/post_img/stayingup-reintegrate.png)
+
+As you can see in the picture, we have reached a point where the `feature`
+branch must be reintegrated back into trunk. However, the branch contains a
+mishmash of revisions, specifically r10,11,20,25 and 30 from `trunk` and r18,23
+and 40 specific to the branch. We only want to merge the latter revisions and
+skip the former ones as only the latter revisions contain changes not present
+in `trunk`.
+
+If we were to try:
+
+    cd trunk
+    svn merge branches/feature
+
+we would get a lot of conflicts, as the revision range merge command would try
+to apply changesets to `trunk` for the second time. Instead, if we do:
+
+    svn merge trunk@30 branches/feature
+
+SVN will take the HEAD revision of the `feature` branch and _subtract_ (diff)
+r30 of `trunk` from it.
+
+![Diff](/post_img/stayingup-diff.png)\
+
+Then the diff is applied to the working copy, proper `svn:mergeinfo`
+property is recorded and you're good to go!
+
+## Maintaining a release branch
+
+![Maintaining a Release](/post_img/release.png)
+
+Every project must have a release at some point, otherwise it's not a project -
+just some people hacking around for fun. Releases must be maintained - that's
+also the unfortunate consequence of making your product accessible to wider
+audience.
+
+In the following picture you can see a developer following a flawed development
+model.  Features are developed in feature branches and _merged_ into the
+release branch, because "That's what the client wants! He wants feature **X**
+in the release **1.0.1**!". You can also note, that the merge into the release
+branch was done when the feature wasn't fully finished (more probably, there
+were several features in the feature branch - another unfortunate choice).
+Obviously, the same features will have to be merged into the `trunk`. However,
+there are also other bugfixes which are done to the `release` branch and which
+are constantly merged back into trunk (following the
+[firm-soft](http://www.infoq.com/articles/agile-version-control) development
+model).
+
+The depicted model is flawed. Feature ought to be incorporated into the
+`release` branch should have been developed in the branch branched from the
+`release` branch in the first place. However, we have to work with what we've
+got.  Let's see how we can manage this scenario with SVN.
+
+First, set up the playground:
+
+    svn copy trunk branches/release
+    svn copy trunk branches/feature
+    cd branches
+    svn co branches/feature
+    cd feature
+    ... work
+
+Now the time has come to merge part of the feature to the `release` branch:
+
+    cd branches
+    svn co branches/release
+    cd release
+    svn merge branches/feature
+    > --- Merging r10 through r30 into '.':
+    svn ci -m 'Merged revisions 10-30 from branches/feature'
+
+And the `mergeinfo` will record the merge, as it should:
+
+    cd branches/release && svn pg svn:mergeinfo .
+    > /branches/feature: 10-30
+
+During the next stage in development, either of the following two things can happen:
+
+* Changes from the `release` branch will get pulled into the trunk first
+  followed by reintegration from the `feature` branch
+* The `feature` branch will get reintegrated into the trunk (as in the picture)
+  and then the fixes from the `release` branch will get merged in
+
+### Reintegration happens first
+
+Say we reintegrated the `feature` branch first:
+
+    cd trunk
+    svn merge branches/feature
+
+Consider what's going to happen if we try to merge the changes in the `release`
+branch into the trunk right now.
+
+1. `trunk` contains the whole `feature` branch
+2. `release` branch contains a subset of changes from the `feature` branch
+
+If we do `svn merge branches/release` from `trunk`, we will get a lot of
+conflicts on the files coinciding in the first and second steps above, namely
+the part of the `feature` branch merged into the `release` branch.  This
+happens because SVN has no way of ensuring that the changeset that was merged
+into the `release` branch from the `feature` branch (revision 35) represented
+the exact same changeset that got merged into the `trunk`. You can follow the
+thread which describes the issue in more detail
+[here](http://thread.gmane.org/gmane.comp.version-control.subversion.user/99964).
+
+We can alleviate the problem by using the
+[change blocking](http://svnbook.red-bean.com/nightly/en/svn.branchmerge.advanced.html#svn.branchmerge.advanced.blockchanges)
+technique - recording the `svn:mergeinfo` property without the actual merge.
+
+    svn merge --record-only -c 31 branches/release
+
+This way SVN won't try to merge the changeset associated with revision 31 (the
+one which contains the merge commit from `feature` to `release` branch).
+
+### Changes from the Release branch get pulled first
+
+Changes from a diverging branch (such as the `release` branch) usually aren't
+bulk-merged, but cherry-picked one by one, as we're interested in one-off
+bugfixes or merge commits. No one should be developing directly over the
+`release` branch.
+
+This scenario mirrors the previous scenario, only the source and the target
+revisions of the `merge --record-only` are different. Here we need to:
+
+    svn merge --record-only -r 10:30 branches/feature
+
+So that when the `feature` branch gets merged into the `trunk`, revisions 10 to
+30 wouldn't be merged.
+
+## Merging subtrees
+
+The largest source of complexity in SVN (seems so from where I'm standing) is
+its flexibility. You can check out arbitrary subtrees of a repository, you can
+grant access to users on a subtree basis, you even have special switches to
+checkout only a part of a repository to the given depth (--depth). Git and
+Mercurial, for example, do not have these "features", which is a big win in
+simplicity and a great reduction in corner cases.
+
+Consider, that in SVN you can:
+
+* Switch a subtree of your working copy to another path in the repository
+* Checkout a tree with a subtree which is inaccessible to you due to access restrictions
+* Checkout a tree using `--depth immediates` and get only the first layer of the tree
+
+All of the above cases can wreak havoc to your development process, especially
+where complex merge scenarios are involved.
+
+### Mergeinfo inheritance and elision
+
+If you _really_ want to understand how SVN handles `mergeinfo` property, read
+the [definitive guide to mergeinfo](http://www.collab.net/community/subversion/articles/merge-info.html).
+If you only want an overview of how mergeinfo inheritance and elision work,
+continue reading this post.
+
+### Keeping mergeinfo clean
+
+Remember that `svn:mergeinfo` is just another property and SVN tracks it as
+such?  In order to keep headaches at the minimum level, `mergeinfo` property
+should reside only in the root directory of a branch. All of the actions which
+create `mergeinfo` entries in subdirectories should be cleaned up by eliding
+the property up the tree until it reaches the root (guided by rules described
+in the previous section) or removing it completely (if it's safe to do so).
+
+-------
+1. If you get `svn: Retrieval of mergeinfo unsupported by 'root'`
+   when trying to `svn merge --reintegrate`, it means that your SVN server was
+   upgraded from the 1.4 version while the repository itself wasn't (the most
+   probable case).  Please, follow the advice given in the
+   [SVN release notes](http://subversion.apache.org/docs/release-notes/1.5.html#repos-upgrades)
+   to resolve this issue.
+
