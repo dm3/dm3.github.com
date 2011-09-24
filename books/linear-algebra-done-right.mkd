@@ -3,6 +3,11 @@ layout: book
 title: Linear Algebra Done Right (notes)
 ---
 
+This page is a collection of notes (definitions/propositions/theorems without
+proofs) written down while going through the [Linear Algebra Done
+Right](http://linear.axler.net/) by Sheldon Axler. There will also be code in
+Scala which will possibly help me in trying to understand the concepts.
+
 # Vectors and vector spaces
 
 We will work with spaces of vectors in complex (`$C$`) and real (`$R$`)
@@ -15,6 +20,17 @@ properties:
 * Additive inverse: `$\forall a, \quad \exists (-a)$` such that `$a + (-a) = 0$`
 * Multiplicative inverse: `$a * 1/a = 1$`
 * Distributive property: `$x(a + b) = xa + xb$`
+
+{% highlight scala %}
+forAll { (x: Double, y: Double, z: Double) => {
+    x + y == y + x &&
+    x + (y + z) == (x + y) + z &&
+    x + 0 == x &&
+    x + (-x) = 0 &&
+    x * 1/x = 1 &&
+    x * (y + z) = x * y + x * z
+}}
+{% endhighlight %}
 
 Throughout the book, `$F$` stands for `$R$` and `$C$`.
 
@@ -30,20 +46,73 @@ Throughout the book, `$F$` stands for `$R$` and `$C$`.
 > * Multiplicative identity
 > * Distributive properties
 
+{% highlight scala %}
+/**
+ * Let's constrain vector spaces to finite-dimensional ones.
+ */
+class VectorSpace[T](val dimension: Int, val vectors: Set[Vector[T]]) {
+    val zero: Vector[T] = new Vector(Stream.continually(0).take(dimension).toList)
+
+    def additiveIdentity(v: Vector[T]): Vector[T] = vectors.find(_ + v == v)
+    def additiveInverse(v: Vector[T]): Vector[T] = vectors.find(_ + v == 0)
+    def multiplicativeIdentity(v: Vector[T]): Vector[T] = vectors.find(_ * v == v)
+    def multiplicativeInverse(v: Vector[T]): Vector[T] = vectors.find(_ * v == 1)
+}
+{% endhighlight %}
+
 Elements of a vector space are called **vectors** or **points**.
+
+{% highlight scala %}
+class Vector[T : Numeric](val components: IndexedSeq[T]) {
+    def apply(position: Int): T = components(position)
+    def +(v: Vector[T]) = new Vector((components zip v.components) map (_._1 + _._2))
+    def *(x: T) = new Vector(components map (_ * x))
+    def unary_-: Vector[T] = this * (-1)
+}
+{% endhighlight %}
 
 **1.2 Proposition:** A vector space has a unique additive identity.
 
+{% highlight scala %}
+forAll { (space: VectorSpace[T], v1: Vector[T], v2: Vector[T]) => {
+    space.additiveIdentity(v1) == space.additiveIdentity(v2)
+}}
+{% endhighlight %}
+
 **1.3 Proposition:** Every element in a vector space has a unique additive inverse.
+
+{% highlight scala %}
+forAll { (space: VectorSpace[T], v1: Vector[T], v2: Vector[T]) => {
+    space.additiveInverse(v1) != space.additiveInverse(v2)
+}}
+{% endhighlight %}
 
 **1.4 Proposition:**
 `$0v = 0, \quad \forall v \in V$`.
 
+{% highlight scala %}
+forAll { (space: VectorSpace[T], v: Vector[T]) => {
+    v * 0 == space.zero
+}}
+{% endhighlight %}
+
 **1.5 Proposition:**
 `$a0 = 0, \quad \forall a \in F$`.
 
+{% highlight scala %}
+forAll { (space: VectorSpace[T], x: T) => {
+    space.zero * x == space.zero
+}}
+{% endhighlight %}
+
 **1.6 Proposition:**
 `$(-1)v = -v, \quad \forall v \in V$`.
+
+{% highlight scala %}
+forAll { (space: VectorSpace[T], v: Vector[T]) => {
+    v * (-1) == -v
+}}
+{% endhighlight %}
 
 ## Vector subspaces
 
