@@ -88,6 +88,27 @@ a:hover, a:focus {
     text-align: center;
 }
 
+/* index */
+
+ul.sections {
+    font-size: 140%;
+    height: 1em;
+    list-style-type: none;
+    display: table;
+    margin: auto;
+}
+
+ul.sections li {
+    float: left;
+}
+
+ul.sections li a {
+    display: table-cell;
+    vertical-align: middle;
+    padding-right: 1em;
+    padding-left: 1em;
+}
+
 /* home: from mojombo */
 
 ul.posts {
@@ -135,6 +156,14 @@ ul.posts span {
     padding: 0;
 }
 
+/* https://github.com/mojombo/jekyll/issues/199 */
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+}
+
 /* quote */
 
 #post blockquote {
@@ -176,3 +205,12 @@ ul.posts span {
     margin-top: 1.5em;
     text-align: center;
 }
+
+/* book */
+
+#content blockquote {
+    border-left: 2px solid #444444;
+    padding: 0 1em;
+    margin: 0 1em 1.5em;
+}
+

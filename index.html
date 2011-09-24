@@ -3,10 +3,8 @@ layout: default
 title: Home
 ---
 
-<div id="home">
-    <ul class="posts">
-        {% for post in site.posts %}
-            <li><span>{{ post.date | date_to_string }}</span> &raquo; <a href="{{ post.url }}">{{ post.title }}</a></li>
-        {% endfor %}
-    </ul>
-</div>
+<ul class="sections">
+    <li class="blog"><a href="/blog.html">Blog</a></li>
+    <li class="books"><a href="/books.html">Study</a></li>
+    <li class="code"><a href="http://github.com/dm3">Code</a></li>
+</ul>
