@@ -10,7 +10,7 @@ Scala which will possibly help me in trying to understand the concepts.
 
 # Vectors and vector spaces
 
-We will work with spaces of vectors in complex (`$C$`) and real (`$R$`)
+We will work with spaces of vectors in complex (`$\C$`) and real (`$\R$`)
 domains. They both are represent a _field_, i.e. they have the following
 properties:
 
@@ -20,6 +20,7 @@ properties:
 * Additive inverse: `$\forall a, \quad \exists (-a)$` such that `$a + (-a) = 0$`
 * Multiplicative inverse: `$a * 1/a = 1$`
 * Distributive property: `$x(a + b) = xa + xb$`
+
 
 {% highlight scala %}
 forAll { (x: Double, y: Double, z: Double) => {
@@ -32,7 +33,7 @@ forAll { (x: Double, y: Double, z: Double) => {
 }}
 {% endhighlight %}
 
-Throughout the book, `$F$` stands for `$R$` and `$C$`.
+Throughout the book, `$F$` stands for `$\R$` and `$\C$`.
 
 ## Vector spaces
 
@@ -48,7 +49,9 @@ Throughout the book, `$F$` stands for `$R$` and `$C$`.
 
 {% highlight scala %}
 /**
- * Let's constrain vector spaces to finite-dimensional ones.
+ * Let's constrain vector spaces to finite-dimensional ones. We also make a
+ * huge simplification of a model and use Set as a container for vectors (which
+ * obviously makes it finite).
  */
 class VectorSpace[T](val dimension: Int, val vectors: Set[Vector[T]]) {
     val zero: Vector[T] = new Vector(Stream.continually(0).take(dimension).toList)
@@ -124,12 +127,38 @@ forAll { (space: VectorSpace[T], v: Vector[T]) => {
 > * Closure under addition: `$if \quad a, b \in U: \quad a + b \in U$`
 > * Closure under multiplication: `$if \quad a \in U, x \in F: \quad ax \in U$`
 
+{% highlight scala %}
+/**
+ * We can now simplify VectorSpace according to the propositions in the
+ * previous chapter and enrich it with the subspace concept.
+ */
+class VectorSpace[T](val dimension: Int, val vectors: Set[Vector[T]]) {
+    private[this] def constant(value: T): Vector[T] =
+                    new Vector(Stream.continually(0).take(dimension).toList)
+    val zero: Vector[T] = constant(0)
+    val one: Vector[T] = constant(1)
+
+    def additiveIdentity(v: Vector[T]): Vector[T] = zero
+    def additiveInverse(v: Vector[T]): Vector[T] = -v
+    def multiplicativeIdentity(v: Vector[T]): Vector[T] = one
+    def multiplicativeInverse(v: Vector[T]): Vector[T] = vectors.find(_ * v == 1)
+
+    def isSubspace(other: VectorSpace[T]): Boolean = vectors contains other.vectors
+}
+{% endhighlight %}
+
 ## Sums and direct sums
 
 > The **sum** of `$U_1,\dotsc,U_m$`, denoted `$U_1 + \dotsb + U_m$` is a set of all
 > possible sums of elements of `$U_1,\dotsc,U_m$`.
 >
 > `$$U_1 + \dotsb + U_m = \left\{ {u_1 + \dotsb + u_m: u_1 \in U_1,\dotsc,u_m \in U_m}\right\}$$`
+
+{% highlight scala %}
+object VectorSpace {
+    def sum[T](spaces: Iterable[VectorSpace[T]): VectorSpace[T] = ...
+}
+{% endhighlight %}
 
 > The **direct sum** of subspaces `$U_1,\dotsc,U_m$`, written
 >
@@ -235,7 +264,7 @@ independent list of vectors in `$V$` with length `$dimV$` is a basis of `$V$`.
 vector space, then `$dim(U_1 + U_2) = dimU_1 + dimU_2 - dim(U_1 \cap U_2)$`.
 
 **2.19 Proposition:** Suppose `$V$` is finite-dimensional and `$U_1,\dotsc,U_m$`
-are subspaces of `$V$` such tat `$V = U_1 + \dotsb + U_m$` and `$dimV = dimU_1 + \dotsb + dimU_m$`.
+are subspaces of `$V$` such that `$V = U_1 + \dotsb + U_m$` and `$dimV = dimU_1 + \dotsb + dimU_m$`.
 Then `$V = U_1 \bigoplus \dotsb \bigoplus U_m$`.
 
 ## Linear Maps
@@ -245,3 +274,39 @@ Then `$V = U_1 \bigoplus \dotsb \bigoplus U_m$`.
 >
 > * Additivity: `$T(u + v) = Tu + Tv$` for all `$u, v \in F$`
 > * Homogeneity: `$T(av) = a(Tv)$` for all `$a \in F$` and all `$v \in V$`.
+
+> If `$S$` and `$T$` are linear maps, `$ST$` (their product) is a linear map
+> too, with the following properties:
+>
+> * Associativity: `$(T_1T_2)T_3 = T_1(T_2T_3)$` when the products make sense.
+> * Identity: `$TI_v = I_wT$` when `$T \in \mathcal{L}(V, W)$`.
+> * Distributive properties: `$(S_1 + S_2)T = S_1T + S_2T$` and `$S(T_1 + T_2) = ST_1 + ST_2$`.
+
+## Null Spaces and Ranges
+
+> For `$T \in \mathcal{L}(V, W)$`, the **null space** of `$T$` denoted `$nullT$`, is:
+>
+> `$$nullT = \left\{ {v \in V: Tv = 0}\right\}$$`
+
+**3.1 Proposition:** If `$T \in \mathcal{L}(V, W)$`, then `$nullT$` is a
+subspace of `$V$`.
+
+> A linear map `$T: V \rightarrow W$` is called **injective** if whenever
+> `$u,v \in V$` and `$Tu = Tv$`, `$u = v$`.
+
+**3.2 Proposition:** Let `$T \in \mathcal{L}(V, W)$`. Then `$T$` is injective
+if and only if `$nullT = {0}$`.
+
+> For `$T \in \mathcal{L}(V, W)$`, the **range** of `$T$`, denoted `$rangeT$`, is:
+>
+> `$$rangeT = \left\{ {Tv: v \in V}\right\}$$`
+
+**3.3 Proposition:** If `$T \in \mathcal{L}(V, W)$`, then `$rangeT$` is a
+subspace of `$W$`.
+
+> A linear map `$T: V \rightarrow W$` is called **surjective** if its range equals `$W$`.
+
+**3.4 Theorem:** If `$V$` is finite-dimensional and `$T \in \mathcal{L}(V, W)$`, then `$rangeT$` is a
+finite-dimensional subspace of `$W$` and
+
+`$$dimV = dim(nullT) + dim(rangeT)$$`
