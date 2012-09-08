@@ -1,0 +1,17 @@
+---
+layout: post
+title: Random ideas 2: Business Analysis software
+---
+
+# Business Analysis software
+
+Software development firms which transition from small/medium to large (say
+200+ people) usually have a problem with process organization. The things that
+work for 10 people tend to break for 30, and stuff that works for 30 certainly
+doesn't work for a 100. Internal processes need to be kept consistent between
+company divisions, projects and teams in order to facilitate painless
+reassignments and cheap training of new hires.
+
+One of the most critical activities in software development is requirement
+analysis. Without good requirements software is moot - you can't build a useful
+thing if no one needs it.

@@ -1,0 +1,51 @@
+# Pervasive computing
+
+Intelligent houses, smart cars, self-managing street lights, communicating park
+benches. Does it sound like science fiction? Not anymore, at least to the
+technically inclined.
+
+The ideas of smart distributed systems aren't new. Science fiction writers have
+been exploring and regurgitating the concepts for many years - starting from
+the first hard science fiction and cyberpunk novels. As you might guess, the
+better part of the technology dreamed up by writers is still unattainable as
+science fiction masters are known of bold ideas and infinite optimism in the
+development of the human race (most of them, anyway). However, some of the
+ideas are coming to life in the branch of computing science known as pervasive
+or ubiquitous computing. In fact, there's another great synonym for ubiquitous
+computing - everyware. A worthy companion to the likes of hardware and
+software.
+
+## Possibilities
+
+What's so exciting about having computers everywhere? For starters, it gives an
+unmatched level of control and auditing over your surroundings. Imagine being
+able to know, whether the ceiling in your apartment is being flooded by your
+neighbour living upstairs by the means of individual panels reports going
+directly to your "Project Glass"[1] successor.
+
+## Communication
+
+How would such a disparate array of machines communicate with each other? The
+mechanism of communication should be sufficiently compact and low on energy
+consumption. It should also support automatic peer discovery and registration.
+Of course, building a device with these properties is an ongoing research
+endeavour, however there already exists a technology which has successfully
+carved out a niche in the modern computing - RFID[3]. It has gained immense
+popularity in fields of supply-chain management and logistics.
+
+## Network Topology
+
+Main mass of pervasive computing networks tend to be shifted to the edges
+of the network as opposed to the centralized approach of standard
+client-server applications.
+
+## Hurdles
+
+* Battery life - really small computing units need to function for a very long
+  time without having to be explicitly maintained.
+* Materials - ideally, units should be disposable and eco-friendly.
+* Social issues - government monitoring, malicious agents, neo-luddites.
+
+[Project Glass](http://en.wikipedia.org/wiki/Project_Glass)
+[EPFL: Pervasive Hospital](http://lpdwww.epfl.ch/upload/documents/publications/730925564pervasivehospital_final.pdf)
+[RFID in Pervasive Computing](http://m.thispervasiveday.com/documents/articles-perspectives/rfid-in-pervasive-computing.pdf)

@@ -1,0 +1,31 @@
+---
+layout: post
+title: Development on a Mac
+---
+
+# Why Mac?
+
+Hardware, hardware and once more - hardware. Hassle-free computers for
+non-religious developers who dislike Windows. No problems with power
+management, wireless drivers or graphic cards.
+
+# Install homebrew
+
+Homebrew documentation covers it perfectly.
+
+* Set up an apple developer account - the worst part, definitely.
+* Download command line tools - you'll be out of luck if you don't have the latest OSX version.
+* Install Homebrew.
+
+# Configure system
+
+Clone your dotfiles repository from github. You don't have any? Good for you...
+
+# Configure the terminal
+
+Whatever suits your needs.
+
+# Configure VIM
+
+Install a more feature-rich version of vim from homebrew-alt repository and
+modify your PATH to have /usr/local/bin before /usr/bin.
