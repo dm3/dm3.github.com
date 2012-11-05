@@ -206,6 +206,12 @@ code.has-jax {
     text-align: center;
 }
 
+#post img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 /* book */
 
 #content blockquote {
