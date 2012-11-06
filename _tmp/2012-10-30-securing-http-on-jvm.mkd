@@ -82,14 +82,33 @@ identity - information such as a name or email. The association is performed
 by signing the public key and the identity with a digital signature.
 
 Now you might wonder, who has the authority to create digital signatures? The
-answer is - anyone. However, a certificate signed by a malicious party doesn't
-mean much as the receiver of the certificate is capable of verifying whether
-the signer is trusted.
+answer is - anyone. The same way anyone with a spare pen could sign a paper
+document, anyone with a spare private key could sign a digital document.
+However, a certificate signed by a malicious party doesn't mean much as the
+receiver of the certificate is capable of verifying whether the signer is
+trusted.
 
 Verification is possible because the signature of the certificate is extracted
 from the private key of the signer. This way we can always know whether the
 certificate was signed by the authority we trust (meaning we already trust the
-certificate of the signer).
+certificate of the signer). Therefore, certificates signed by trusted parties
+can be used to perform authentification in security schemes like HTTPS.
+
+### Certificate Authorities
+
+A trusted party which issues certificates is called a Certificate Authority, or
+just a CA. In some cases you can be your own CA if you sign the certificate
+yourself. However, such a certificate will only be trusted if your client
+already believes in your trustworthiness.
+
+Self-signed certificates are useful outside of the public internet - in private
+networks or custom security schemes where clients implicitly trust the signer.
+For example, in some companies computers come with pre-installed Certificate
+Authority bundles which list the company as a trusted CA. This way even the
+security of public HTTPS websites is compromised as the company can freely
+monitor all of the TLS traffic by being a Man in the Middle<sup><a href="#5">5</a></sup>.
+
+On the other hand, public internet depends on trusted CAs
 
 All of the diagrams were done in the free [Diagram.ly](http://diagram.ly) tool.
 
@@ -109,3 +128,4 @@ All of the diagrams were done in the free [Diagram.ly](http://diagram.ly) tool.
    [Moserware](http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html)
    for an in-depth look at the communication which occurs during a handshake.
 4. &#x20;<a id="4">&nbsp;</a>[Wikipedia on Public Key Cryptography](http://en.wikipedia.org/wiki/Public-key_cryptography)
+5. &#x20;<a id="5">&nbsp;</a>[Wikipedia on Man-in-the-Middle Attack](http://en.wikipedia.org/wiki/Man-in-the-middle_attack)
