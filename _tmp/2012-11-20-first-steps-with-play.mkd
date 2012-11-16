@@ -1,0 +1,17 @@
+title: First Steps with Play 2.x
+
+Play is a very nice framework which positions itself as the best performant
+rapid web application development tool for the JVM. It's another take on the
+MVC application model, this time backed by the Akka actors and Twirl templating
+engine.
+
+It's really easy to get started with: just download the Play package, unzip and
+add the `play` executable to your path.
+
+Over the last year I've grown accustomed to the component-oriented web
+application development, meaning different parts of the application UI are
+developed as separate pieces of logic and layout and assembled together on a
+page. Such a development model is really comfortable as components can be as
+fine-grained as you like and the markup remains simple.
+
+On the surface Play doesn't seem to support this kind of development model
