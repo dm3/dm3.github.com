@@ -27,6 +27,8 @@ Suppose you have a server providing an API through the HTTP protocol and a
 known set of clients which should be allowed to access the server. What is the
 best way of authenticating clients and securing the API at the same time?
 
+![Client-Server Mutual Authentication](/post_img/client-server-mutual.png)
+
 The standard way to secure HTTP is through upgrading the protocol to HTTPS
 (HTTP Secure). HTTPS is widely used in the internet (mainly by browsers) to
 verify sites identities and to encrypt all of the communication happening
@@ -162,18 +164,41 @@ in person).
 
 Self-signed certificates are useful outside of the public internet - in private
 networks or custom security schemes where clients implicitly trust the signer
-(like our mutual authentication problem).  For example, in some companies
-computers come with pre-installed Certificate Authority bundles which list the
-company as a trusted CA. This is generally useful but can also compromise the
-security of public HTTPS websites as the company can freely monitor all of the
-TLS traffic by being a Man in the Middle<sup><a href="#6">6</a></sup>.
+(like our mutual authentication problem).  For example, some companies provide
+computers with pre-installed Certificate Authority bundles which list the
+company as a trusted CA. This allows the company to launch secure internal web
+applications without triggering any browser safeguards (e.g. 'Continue at your
+own risk...' screens).
+
+On the other hand, public internet depends on commercial CAs which are trusted
+by all of the major browsers. You can obtain a signed certificate from such a
+CA if you can prove your identity and pay the requested amount of money -
+that's exactly how owners of secure domains get their certificates. In the
+following diagram you can see an example of how a certificate is requested and
+used in the public internet.
 
 ![Certificate Authorities](/post_img/ca-signature-flow.png)
 
-On the other hand, public internet depends on commercial CAs which are trusted
-by all of the major browsers. You can buy a signed certificate from such a CA
-by proving your identity - that's exactly how owners of secure domains on the
-internet get their certificates.
+## Cipher Suites
+
+A Cipher Suite is a combination of algorithms used to provide authentication,
+encryption and message authentication code (MAC) algorithms in the first steps
+of the TLS handshake. It's a way to succinctly negotiate the kernel of the
+actual security mechanism.  I won't go into any of the specific algorithms and
+won't even try to explain how they work as it is a job best left to security
+professionals.
+
+The only thing worth noting is that Cipher Suites usually look like the following:
+
+    ECDHE-RSA-RC4-SHA
+    ECDH_ECDSA_WITH_AES_256_CBC_SHA
+    RSA_PSK_WITH_AES_256_GCM_SHA384
+
+Which is a concatenation of separate algorithm names.  The first part
+identifies the authentication algorithm (`ECDHE`, `RSA`, ...), the second part
+- encryption (`RC4`, `AES`, ...) and the last - MAC algorithm (`SHA`, ...). You
+can see the complete list of Cipher Suites used in TLS on the
+[IANA site](http://www.iana.org/assignments/tls-parameters/tls-parameters.xml).
 
 ## The Complete Picture
 
