@@ -3,8 +3,10 @@ layout: wiki
 title: Distributed Systems
 ---
 
-[Distributed system archaeology](https://speakerdeck.com/mrb/distributed-systems-archaeology)
-[HN: Readings in distributed systems](https://news.ycombinator.com/item?id=6648133)
-[Readings in distributed systems](http://christophermeiklejohn.com/distributed/systems/2013/07/12/readings-in-distributed-systems.html)
-[Spark Streaming paper](http://www.cs.berkeley.edu/~matei/papers/2012/hotcloud_spark_streaming.pdf)
-[Dynamo paper](http://www.read.seas.harvard.edu/~kohler/class/cs239-w08/decandia07dynamo.pdf)
+<ul>
+<li>[Distributed system archaeology](https://speakerdeck.com/mrb/distributed-systems-archaeology)</li>
+<li>[HN: Readings in distributed systems](https://news.ycombinator.com/item?id=6648133)</li>
+<li>[Readings in distributed systems](http://christophermeiklejohn.com/distributed/systems/2013/07/12/readings-in-distributed-systems.html)</li>
+<li>[Spark Streaming paper](http://www.cs.berkeley.edu/~matei/papers/2012/hotcloud_spark_streaming.pdf)</li>
+<li>[Dynamo paper](http://www.read.seas.harvard.edu/~kohler/class/cs239-w08/decandia07dynamo.pdf)</li>
+</ul>
