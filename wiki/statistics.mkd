@@ -1,0 +1,6 @@
+---
+layout: wiki
+title: Statistics
+---
+
+[Uri Simonsohn research page](http://opim.wharton.upenn.edu/~uws/)

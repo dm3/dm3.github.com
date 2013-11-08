@@ -1,0 +1,6 @@
+---
+layout: wiki
+title: APIs
+---
+
+[Pragmatic REST API design practices](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api)

@@ -1,0 +1,6 @@
+---
+layout: wiki
+title: Event Sourcing
+---
+
+[Greg Young: Building Event Storage with RDBMS](http://cqrs.wordpress.com/documents/building-event-storage/)

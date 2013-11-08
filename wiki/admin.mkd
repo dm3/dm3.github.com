@@ -1,0 +1,7 @@
+---
+layout: wiki
+title: System Administration
+---
+
+[How-to secure a new linux server](http://spenserj.com/blog/2013/07/15/securing-a-linux-server/)
+[Setting up metrics with Graphite/Riemann](http://labs.amara.org/2012-07-16-metrics.html#riemann)

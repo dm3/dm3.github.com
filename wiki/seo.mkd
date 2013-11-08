@@ -1,0 +1,7 @@
+---
+layout: wiki
+title: SEO
+---
+
+[HN: Google SEO Started Guide](https://news.ycombinator.com/item?id=6683965)
+[SEO Checklist](http://www.clickminded.com/seo-checklist/)
