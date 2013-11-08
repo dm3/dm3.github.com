@@ -1,3 +1,0 @@
-# A twelve-factor JVM application
-
-http://www.12factor.net
