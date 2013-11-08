@@ -231,4 +231,3 @@ All of the diagrams were done in the free [Diagram.ly](http://diagram.ly) tool.
    for an in-depth look at the communication which occurs during a handshake.
 4. &#x20;<a id="4">&nbsp;</a>[Wikipedia on Public Key Cryptography](http://en.wikipedia.org/wiki/Public-key_cryptography)
 5. &#x20;<a id="5">&nbsp;</a>[Wikipedia on X.509](http://en.wikipedia.org/wiki/X.509#Sample_X.509_certificates)
-6. &#x20;<a id="6">&nbsp;</a>[Wikipedia on Man-in-the-Middle Attack](http://en.wikipedia.org/wiki/Man-in-the-middle_attack)
